@@ -10,9 +10,11 @@ Desktop LINE（Themida 保護）向けの **unpack / ネイティブシンボル
 
 ## できること
 
-1. **unpack** — Themida 保護の `LINE.exe` を [unlicense](https://github.com/ergrelet/unlicense) で dump → `data/unpacked_LINE.exe`
-2. **find** — 単語（例: `sendMessage`）から文字列列挙 → LEA xref → Ghidra decompile
-3. **focus** — 全件 decompile 結果のキーワード分類（任意）
+1. **check / latest / versions** — インストール版 / 実行中版 / 最新版（`update_info.json`）の取得と比較、インストール済みバージョン一覧
+2. **update** — LINE Desktop を最新版へ更新（ZIP 取得 → 展開 → LINE.ini 更新）
+3. **unpack** — Themida 保護の `LINE.exe` を [unlicense](https://github.com/ergrelet/unlicense) で dump → `data/unpacked_LINE.exe`
+4. **find** — 単語（例: `sendMessage`）から文字列列挙 → LEA xref → Ghidra decompile
+5. **focus** — 全件 decompile 結果のキーワード分類（任意）
 
 ## 必要環境
 
@@ -39,9 +41,19 @@ bun install
 ## 使い方
 
 ```powershell
+# 0) バージョン確認 / 一覧 / 最新版取得 / 更新
+bun run check                  # インストール版 vs 最新版の比較
+bun run versions               # インストール済みバージョン一覧
+bun run check -- --version 26.4.2.3954   # 指定バージョンで比較
+bun run latest                 # 最新版だけ出力
+bun run update -- --dry-run    # 更新対象の確認
+bun run update                 # LINE Desktop を最新へ更新
+bun run update -- --unpack     # 更新 + unpack まで一括
+
 # 1) Themida unpack（LINE を終了してから推奨）
 bun run unpack
 # bun run unpack -- --timeout 180
+# bun run unpack -- --version 26.4.2.3954   # インストール済み過去版を明示選択
 
 # 2) シンボル検索（文字列 + xref だけなら Ghidra 不要）
 bun run find -- sendMessage --list-only --skip-setup
@@ -54,6 +66,19 @@ bun run find -- sendMessage unsendMessage markAsRead
 bun run search -- unpack
 bun run search -- find sendMessage --max-functions 10
 ```
+
+### update の仕組み
+
+1. `%LOCALAPPDATA%\LINE` からインストール版を検出（`bin/current` の稼働版を優先）
+2. `update_info.json` から現在のバージョンに適用される対象版を解決
+3. `{baseUrl}/{version}/LINE.zip` と `{shared.baseUrl}/{sharedVersion}/lib.zip` をダウンロード
+4. `bin/<version>/` と `bin/shared/<sharedVersion>/` に展開
+5. `LINE.ini` の `last_updated_version` を更新（次回起動で新バージョンを使用）
+6. `--unpack` 指定時は続けて Themida unpack を実行
+
+> **注意**: unpack / update は **LINE を終了してから**実行してください。
+> 稼働中は単一インスタンス制御により Frida 注入が拒否され
+> `ProcessNotRespondingError` になります（詳細: `docs/unpack.md`）。
 
 ### find の主なオプション
 

@@ -31,6 +31,7 @@ import {
   defaultUnpackedExe,
   ensureDataLayout,
 } from "./paths.js";
+import { listInstalledVersions } from "./lineVersions.js";
 
 ensureDataLayout();
 
@@ -60,7 +61,9 @@ for (let i = 0; i < rawArgs.length; i++) {
 if (flags["help"] || flags["h"]) {
   console.log(`usage: bun run unpack -- [options]
 
-  --exe <path>         対象 LINE.exe（未指定なら %LOCALAPPDATA%\\LINE\\bin\\<ver>\\LINE.exe）
+  --exe <path>         対象 LINE.exe（未指定なら自動検出）
+  --version <ver>      インストール済みバージョンを明示選択（例: 26.3.0.3916）
+                       ※ bin/<ver>/LINE.exe が存在するもののみ。--exe より優先度は低い
   --out <path>         出力パス（既定: data/unpacked_LINE.exe）
   --timeout <sec>      unlicense OEP 待ち（既定: 120）
   --skip-download      unlicense の自動取得をスキップ
@@ -77,6 +80,8 @@ const verbose = Boolean(flags["verbose"]);
 const outPath =
   typeof flags["out"] === "string" ? (flags["out"] as string) : defaultUnpackedExe();
 const exeOverride = typeof flags["exe"] === "string" ? (flags["exe"] as string) : null;
+const versionSelect =
+  typeof flags["version"] === "string" ? (flags["version"] as string) : null;
 
 function log(msg: string): void {
   console.info(`[unpack] ${msg}`);
@@ -111,7 +116,25 @@ function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-/** %LOCALAPPDATA%\LINE\bin\<ver>\LINE.exe を解決 */
+/** bin/current/LINE.exe の実バージョン（LINE 起動時にアクティブ版へ同期される） */
+function currentExeVersion(lineRoot: string): string | null {
+  const currentExe = join(lineRoot, "bin", "current", "LINE.exe");
+  if (!existsSync(currentExe)) return null;
+  const r = Bun.spawnSync({
+    cmd: [
+      "powershell.exe",
+      "-NoProfile",
+      "-Command",
+      `(Get-Item -LiteralPath '${currentExe}').VersionInfo.FileVersion`,
+    ],
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const v = (r.stdout?.toString() ?? "").trim();
+  return VERSION_RE.test(v) ? v : null;
+}
+
+/** %LOCALAPPDATA%\LINE\bin から LINE.exe を解決（bin/current 優先 > INI > 最新） */
 function detectInstalledLineExe(): string | null {
   const lineRoot = process.env["NEZU_LINE_ROOT"]?.trim() || join(localAppData(), "LINE");
   const binDir = join(lineRoot, "bin");
@@ -122,13 +145,42 @@ function detectInstalledLineExe(): string | null {
     .filter((name) => existsSync(join(binDir, name, "LINE.exe")));
   if (versions.length === 0) return null;
 
+  const currentVer = currentExeVersion(lineRoot);
   const iniVer = readIniVersion(join(lineRoot, "Data", "LINE.ini"));
-  const version =
-    iniVer && versions.includes(iniVer)
-      ? iniVer
-      : versions.sort(compareVersions).at(-1)!;
 
+  // bin/current/LINE.exe が実在する場合: 対応 <version> フォルダが残っていればそれを、
+  // 無ければ current 自体を使う（LINE は起動時にバージョンフォルダを current へ統合する）。
+  const currentExe = join(binDir, "current", "LINE.exe");
+  if (currentVer) {
+    const folderExe = join(binDir, currentVer, "LINE.exe");
+    return existsSync(folderExe) ? folderExe : existsSync(currentExe) ? currentExe : null;
+  }
+
+  const version =
+    iniVer && versions.includes(iniVer) ? iniVer : versions.sort(compareVersions).at(-1)!;
   return join(binDir, version, "LINE.exe");
+}
+
+/** 対象 LINE.exe の解決。--version 指定時はインストール済みバージョンのみ許可 */
+function resolveTargetExe(): string | null {
+  if (versionSelect) {
+    const found = listInstalledVersions().find((v) => v.version === versionSelect);
+    if (!found) {
+      const avail = listInstalledVersions()
+        .map((v) => `  ${v.version}${v.isCurrent ? " (current)" : ""}`)
+        .join("\n");
+      throw new Error(
+        [
+          `指定バージョン ${versionSelect} はインストールされていません。`,
+          "インストール済み:",
+          avail || "  （なし）",
+          "一覧: bun run vyline:versions",
+        ].join("\n"),
+      );
+    }
+    return found.exePath;
+  }
+  return detectInstalledLineExe();
 }
 
 function findUnlicenseExe(root: string): string | null {
@@ -252,13 +304,14 @@ function pickNewestUnpacked(dir: string, afterMs: number): string | null {
 }
 
 async function main(): Promise<void> {
-  const srcExe = exeOverride ?? detectInstalledLineExe();
+  const srcExe = exeOverride ?? resolveTargetExe();
   if (!srcExe || !existsSync(srcExe)) {
     throw new Error(
       [
         "LINE.exe が見つかりません。",
         "  --exe <path> で指定するか、Desktop LINE をインストールしてください。",
-        `  既定探索: %LOCALAPPDATA%\\LINE\\bin\\<version>\\LINE.exe`,
+        "  既定探索: %LOCALAPPDATA%\\LINE\\bin\\<version>\\LINE.exe",
+        "  一覧: bun run vyline:versions",
       ].join("\n"),
     );
   }

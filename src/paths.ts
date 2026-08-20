@@ -8,6 +8,7 @@
 
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const _here = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +22,36 @@ export const GHIDRA_SCRIPTS_DIR = join(REPO_ROOT, "ghidra-scripts");
 export const RE_TOOLS_DIR = join(DATA_DIR, "re-tools");
 export const OUT_DIR = join(DATA_DIR, "out");
 export const GHIDRA_PROJECTS_DIR = join(DATA_DIR, "ghidra-projects");
+
+/** LINE Desktop インストールルート。VYLINE_LINE_ROOT / NEZU_LINE_ROOT / %LOCALAPPDATA%\LINE の順 */
+export function defaultLineRoot(override?: string): string {
+  return (
+    override ??
+    process.env["VYLINE_LINE_ROOT"]?.trim() ??
+    process.env["NEZU_LINE_ROOT"]?.trim() ??
+    join(localAppData(), "LINE")
+  );
+}
+
+export function localAppData(): string {
+  return process.env["LOCALAPPDATA"] ?? join(homedir(), "AppData", "Local");
+}
+
+export function lineBinDir(lineRoot: string): string {
+  return join(lineRoot, "bin");
+}
+
+export function lineDataDir(lineRoot: string): string {
+  return join(lineRoot, "Data");
+}
+
+export function lineIniPath(lineRoot: string): string {
+  return join(lineDataDir(lineRoot), "LINE.ini");
+}
+
+export function versionExePath(lineRoot: string, version: string): string {
+  return join(lineBinDir(lineRoot), version, "LINE.exe");
+}
 
 export function defaultUnpackedExe(): string {
   return (
