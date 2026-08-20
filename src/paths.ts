@@ -23,6 +23,9 @@ export const RE_TOOLS_DIR = join(DATA_DIR, "re-tools");
 export const OUT_DIR = join(DATA_DIR, "out");
 export const GHIDRA_PROJECTS_DIR = join(DATA_DIR, "ghidra-projects");
 
+export const APK_DIR = join(DATA_DIR, "apk");
+export const APK_JADX_DIR = join(DATA_DIR, "apk-jadx");
+
 /** LINE Desktop インストールルート。VYLINE_LINE_ROOT / NEZU_LINE_ROOT / %LOCALAPPDATA%\LINE の順 */
 export function defaultLineRoot(override?: string): string {
   return (
@@ -61,7 +64,7 @@ export function defaultUnpackedExe(): string {
 }
 
 export function ensureDataLayout(): void {
-  for (const p of [DATA_DIR, RE_TOOLS_DIR, OUT_DIR, GHIDRA_PROJECTS_DIR]) {
+  for (const p of [DATA_DIR, RE_TOOLS_DIR, OUT_DIR, GHIDRA_PROJECTS_DIR, APK_DIR, APK_JADX_DIR]) {
     mkdirSync(p, { recursive: true });
   }
 }
