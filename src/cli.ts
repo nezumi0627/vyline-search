@@ -9,6 +9,9 @@
  *   bun run search -- check --json
  *   bun run search -- update --unpack
  *   bun run search -- versions
+ *   bun run search -- apk unpack
+ *   bun run search -- apk find editMessage
+ *   bun run search -- apk diff --auto
  */
 
 export {};
@@ -26,6 +29,16 @@ Usage:
   bun run search -- latest [options]    # 最新版のみ表示
   bun run search -- update [options]    # LINE Desktop を最新版へ更新
   bun run search -- versions [options]  # インストール済みバージョン一覧
+  bun run search -- apk <sub> [options] # LINE Android APK 解析
+
+APK Subcommands:
+  bun run search -- apk versions        # ローカル APK 一覧
+  bun run search -- apk latest          # 最新版情報 (APKPure)
+  bun run search -- apk download        # APK ダウンロード (best-effort)
+  bun run search -- apk unpack          # jadx デコンパイル
+  bun run search -- apk find <term>     # 文字列 / クラス / メソッド検索
+  bun run search -- apk diff --auto     # 2 バージョンの差分解析
+  bun run search -- apk verify-thrift   # Thrift 構造体の検証
 
 Shortcuts:
   bun run unpack -- ...
@@ -35,10 +48,12 @@ Shortcuts:
   bun run latest -- ...
   bun run update -- ...
   bun run versions -- ...
+  bun run apk -- ...
 
 Docs:
   docs/unpack.md
   docs/find-native-symbol.md
+  docs/apk.md
 `);
   process.exit(cmd ? 0 : 1);
 }
@@ -65,6 +80,9 @@ if (cmd === "unpack") {
 } else if (cmd === "versions") {
   process.argv = [process.argv[0]!, process.argv[1]!, ...rest];
   await import("./versions.js");
+} else if (cmd === "apk") {
+  process.argv = [process.argv[0]!, process.argv[1]!, ...rest];
+  await import("./cliApk.js");
 } else {
   console.error(`unknown command: ${cmd}`);
   console.error(`try: bun run search -- unpack`);

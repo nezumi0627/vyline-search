@@ -16,7 +16,8 @@
  *   - Google Play からの直接取得は gplaycli / apkeep 等の別ツールが必要です。
  */
 
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, basename } from "node:path";
 import { APK_DIR, DATA_DIR } from "./paths.js";
 
@@ -57,7 +58,7 @@ export function listLocalApks(): ApkVersion[] {
   return entries
     .map((name) => {
       const path = join(APK_DIR, name);
-      const m = name.match(/LINE-(\d+\.\d+\.\d+\.\d+)\.apk$/i);
+      const m = name.match(/LINE-(\d+(?:\.\d+)+)\.apk$/i);
       const version = m?.[1] ?? name.replace(/\.apk$/i, "");
       return {
         version,
@@ -91,7 +92,7 @@ export interface ApkPureInfo {
   releaseDate: string | null;
 }
 
-async function fetchApkPureInfo(): Promise<ApkPureInfo | null> {
+export async function fetchApkPureInfo(): Promise<ApkPureInfo | null> {
   try {
     const res = await fetch(`${APKPURE_BASE}${APKPURE_LINE_PATH}`, {
       headers: {
@@ -211,7 +212,7 @@ export async function downloadApk(version: string, url: string): Promise<ApkVers
 export function extractApkVersion(apkPath: string): string | null {
   if (!existsSync(apkPath)) return null;
   const name = basename(apkPath);
-  const m = name.match(/LINE-(\d+\.\d+\.\d+\.\d+)\.apk$/i);
+  const m = name.match(/LINE-(\d+(?:\.\d+)+)\.apk$/i);
   if (m) return m[1]!;
 
   // AndroidManifest.xml からバージョンを抽出 (aapt 等を使用)
@@ -235,7 +236,7 @@ export function compareVersions(a: string, b: string): number {
 }
 
 export function sha256File(path: string): string {
-  const hash = Bun.CryptoHasher.createHash("sha256");
+  const hash = createHash("sha256");
   hash.update(readFileSync(path));
   return hash.digest("hex");
 }

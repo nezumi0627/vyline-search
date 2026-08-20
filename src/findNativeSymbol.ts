@@ -100,7 +100,11 @@ function runCmd(cmd: string[], opts?: { env?: Record<string, string> }): { ok: b
   const proc = Bun.spawnSync({
     cmd,
     cwd: REPO_ROOT,
-    env: { ...process.env, ...(opts?.env ?? {}) } as Record<string, string>,
+    env: {
+      ...process.env,
+      JAVA_TOOL_OPTIONS: "-Xms256m -XX:MaxRAMPercentage=70.0",
+      ...(opts?.env ?? {}),
+    } as Record<string, string>,
     stdout: "pipe",
     stderr: "pipe",
   });

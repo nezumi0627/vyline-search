@@ -1,8 +1,8 @@
 {
   "name": "vyline-search",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Desktop LINE (Themida) native symbol search: unpack → string scan → LEA xref → Ghidra decompile",
+  "description": "Desktop LINE (Themida) + Android APK 解析: unpack → string scan → LEA xref → Ghidra/jadx decompile → diff",
   "type": "module",
   "license": "MIT",
   "bin": {
@@ -16,7 +16,7 @@
     "latest": "bun ./src/cli.ts latest",
     "update": "bun ./src/updateLine.ts",
     "versions": "bun ./src/versions.ts",
-    "apk": "bun ./src/lineApkVersions.ts",
+    "apk": "bun ./src/cliApk.ts",
     "search": "bun ./src/cli.ts",
     "typecheck": "tsc --noEmit"
   },
