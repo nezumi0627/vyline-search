@@ -16,6 +16,7 @@
     "latest": "bun ./src/cli.ts latest",
     "update": "bun ./src/updateLine.ts",
     "versions": "bun ./src/versions.ts",
+    "apk": "bun ./src/lineApkVersions.ts",
     "search": "bun ./src/cli.ts",
     "typecheck": "tsc --noEmit"
   },
