@@ -18,7 +18,7 @@
     "versions": "bun ./src/versions.ts",
     "apk": "bun ./src/lineApkVersions.ts",
     "search": "bun ./src/cli.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun x tsc --noEmit -p tsconfig.json"
   },
   "engines": {
     "bun": ">=1.1.0"

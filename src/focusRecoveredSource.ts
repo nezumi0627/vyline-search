@@ -146,7 +146,7 @@ function renderGroupReadme(group: FocusGroup, entries: FocusEntry[]): string {
   lines.push(`- skipped_large: ${skipped}`);
   lines.push(`- failed: ${failed}`);
   lines.push("");
-  lines.push(`## Files`);
+  lines.push("## Files");
   lines.push("");
   for (const entry of entries.slice(0, 100)) {
     lines.push(`- \`${entry.file}\` (${entry.status})`);
@@ -165,20 +165,20 @@ function renderIndexReadme(
   sourceDir: string,
 ): string {
   const lines: string[] = [];
-  lines.push(`# Focused Recovered Source`);
+  lines.push("# Focused Recovered Source");
   lines.push("");
   lines.push(`source: \`${sourceDir}\``);
   lines.push(`generatedAt: ${new Date().toISOString()}`);
   lines.push(`totalNativeFiles: ${totalFiles}`);
   lines.push("");
-  lines.push(`## Groups`);
+  lines.push("## Groups");
   lines.push("");
   for (const { group, entries } of groups) {
     const ok = entries.filter((e) => e.status === "decompiled").length;
     lines.push(`- \`${group.id}\`: ${entries.length} files (${ok} decompiled)`);
   }
   lines.push("");
-  lines.push(`## Usage`);
+  lines.push("## Usage");
   lines.push("");
   lines.push("```powershell");
   lines.push("bun run focus");
@@ -191,8 +191,7 @@ function renderIndexReadme(
 
 async function main(): Promise<void> {
   const sourceDir =
-    argValue("--source-dir") ??
-    join(DATA_DIR, "recovered", "src", "native", "LINE.exe");
+    argValue("--source-dir") ?? join(DATA_DIR, "recovered", "src", "native", "LINE.exe");
   const outDir = argValue("--out-dir") ?? join(OUT_DIR, "focused");
   const manifestOnly = args.includes("--manifest-only");
 
@@ -201,7 +200,7 @@ async function main(): Promise<void> {
       [
         `source dir が見つかりません: ${sourceDir}`,
         "全件 decompile 済みの .c ツリーを --source-dir で渡すか、",
-        `data/recovered/src/native/LINE.exe に配置してください。`,
+        "data/recovered/src/native/LINE.exe に配置してください。",
       ].join("\n"),
     );
   }

@@ -56,7 +56,7 @@ if (cmd === "unpack") {
   process.argv = [process.argv[0]!, process.argv[1]!, ...rest];
   await import("./checkVersion.js");
 } else if (cmd === "latest") {
-  process.env["VYLINE_SEARCH_MODE"] = "latest";
+  process.env.VYLINE_SEARCH_MODE = "latest";
   process.argv = [process.argv[0]!, process.argv[1]!, ...rest];
   await import("./checkVersion.js");
 } else if (cmd === "update") {
@@ -67,6 +67,6 @@ if (cmd === "unpack") {
   await import("./versions.js");
 } else {
   console.error(`unknown command: ${cmd}`);
-  console.error(`try: bun run search -- unpack`);
+  console.error("try: bun run search -- unpack");
   process.exit(1);
 }

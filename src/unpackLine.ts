@@ -25,12 +25,7 @@ import {
 } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { homedir } from "node:os";
-import {
-  DATA_DIR,
-  RE_TOOLS_DIR,
-  defaultUnpackedExe,
-  ensureDataLayout,
-} from "./paths.js";
+import { DATA_DIR, RE_TOOLS_DIR, defaultUnpackedExe, ensureDataLayout } from "./paths.js";
 import { listInstalledVersions } from "./lineVersions.js";
 
 ensureDataLayout();
@@ -38,8 +33,7 @@ ensureDataLayout();
 const UNLICENSE_DIR = join(RE_TOOLS_DIR, "unlicense");
 const UNLICENSE_RELEASE = "0.4.0";
 const UNLICENSE_ASSET = "unlicense-py3.11-x64.zip";
-const UNLICENSE_URL =
-  `https://github.com/ergrelet/unlicense/releases/download/${UNLICENSE_RELEASE}/${UNLICENSE_ASSET}`;
+const UNLICENSE_URL = `https://github.com/ergrelet/unlicense/releases/download/${UNLICENSE_RELEASE}/${UNLICENSE_ASSET}`;
 
 const VERSION_RE = /^\d+\.\d+\.\d+\.\d+$/;
 
@@ -58,7 +52,7 @@ for (let i = 0; i < rawArgs.length; i++) {
   }
 }
 
-if (flags["help"] || flags["h"]) {
+if (flags.help || flags.h) {
   console.log(`usage: bun run unpack -- [options]
 
   --exe <path>         対象 LINE.exe（未指定なら自動検出）
@@ -73,22 +67,20 @@ if (flags["help"] || flags["h"]) {
   process.exit(0);
 }
 
-const timeoutSec = Number(flags["timeout"] ?? 120);
+const timeoutSec = Number(flags.timeout ?? 120);
 const skipDownload = Boolean(flags["skip-download"]);
 const keepWork = Boolean(flags["keep-work"]);
-const verbose = Boolean(flags["verbose"]);
-const outPath =
-  typeof flags["out"] === "string" ? (flags["out"] as string) : defaultUnpackedExe();
-const exeOverride = typeof flags["exe"] === "string" ? (flags["exe"] as string) : null;
-const versionSelect =
-  typeof flags["version"] === "string" ? (flags["version"] as string) : null;
+const verbose = Boolean(flags.verbose);
+const outPath = typeof flags.out === "string" ? (flags.out as string) : defaultUnpackedExe();
+const exeOverride = typeof flags.exe === "string" ? (flags.exe as string) : null;
+const versionSelect = typeof flags.version === "string" ? (flags.version as string) : null;
 
 function log(msg: string): void {
   console.info(`[unpack] ${msg}`);
 }
 
 function localAppData(): string {
-  return process.env["LOCALAPPDATA"] ?? join(homedir(), "AppData", "Local");
+  return process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local");
 }
 
 function readIniVersion(iniPath: string): string | null {
@@ -136,7 +128,7 @@ function currentExeVersion(lineRoot: string): string | null {
 
 /** %LOCALAPPDATA%\LINE\bin から LINE.exe を解決（bin/current 優先 > INI > 最新） */
 function detectInstalledLineExe(): string | null {
-  const lineRoot = process.env["NEZU_LINE_ROOT"]?.trim() || join(localAppData(), "LINE");
+  const lineRoot = process.env.NEZU_LINE_ROOT?.trim() || join(localAppData(), "LINE");
   const binDir = join(lineRoot, "bin");
   if (!existsSync(binDir)) return null;
 
@@ -209,8 +201,7 @@ async function ensureUnlicense(): Promise<string> {
   }
   if (skipDownload) {
     throw new Error(
-      `unlicense がありません: ${UNLICENSE_DIR}\n` +
-        `https://github.com/ergrelet/unlicense/releases から x64 zip を展開するか、--skip-download を外してください。`,
+      `unlicense がありません: ${UNLICENSE_DIR}\nhttps://github.com/ergrelet/unlicense/releases から x64 zip を展開するか、--skip-download を外してください。`,
     );
   }
 
@@ -220,16 +211,7 @@ async function ensureUnlicense(): Promise<string> {
 
   // Bun.fetch は大容量でハングすることがあるため curl を優先
   const curl = Bun.spawnSync({
-    cmd: [
-      "curl.exe",
-      "-L",
-      "--retry",
-      "3",
-      "--fail",
-      "-o",
-      zipPath,
-      UNLICENSE_URL,
-    ],
+    cmd: ["curl.exe", "-L", "--retry", "3", "--fail", "-o", zipPath, UNLICENSE_URL],
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -320,8 +302,7 @@ async function main(): Promise<void> {
   const running = listRunningLinePids();
   if (running.length > 0) {
     log(
-      `警告: LINE プロセスが稼働中です (pid: ${running.join(", ")})。` +
-        `終了してから再実行してください（Frida inject が拒否されやすい）。`,
+      `警告: LINE プロセスが稼働中です (pid: ${running.join(", ")})。終了してから再実行してください（Frida inject が拒否されやすい）。`,
     );
   }
 
@@ -336,7 +317,7 @@ async function main(): Promise<void> {
     unlicense,
     peName,
     `--timeout=${timeoutSec}`,
-    `--target_version=3`,
+    "--target_version=3",
     ...(verbose ? ["--verbose"] : []),
   ];
   log(`cwd: ${installDir}`);
@@ -389,8 +370,7 @@ async function main(): Promise<void> {
 
   if (!dumped || !existsSync(dumped)) {
     throw new Error(
-      `dump 出力が見つかりません。${installDir} を確認してください。\n` +
-        `期待: unpacked_LINE.exe`,
+      `dump 出力が見つかりません。${installDir} を確認してください。\n期待: unpacked_LINE.exe`,
     );
   }
 
@@ -416,14 +396,10 @@ async function main(): Promise<void> {
     unlicense: UNLICENSE_RELEASE,
     timeoutSec,
   };
-  writeFileSync(
-    join(DATA_DIR, "unpack-meta.json"),
-    `${JSON.stringify(meta, null, 2)}\n`,
-    "utf8",
-  );
+  writeFileSync(join(DATA_DIR, "unpack-meta.json"), `${JSON.stringify(meta, null, 2)}\n`, "utf8");
 
   log(`done -> ${outPath} (${(meta.size / 1024 / 1024).toFixed(1)} MB)`);
-  log(`次: bun run find -- sendMessage --list-only`);
+  log("次: bun run find -- sendMessage --list-only");
 }
 
 await main().catch((err) => {

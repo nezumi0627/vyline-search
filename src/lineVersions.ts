@@ -200,9 +200,7 @@ export function detectInstalledDesktop(lineRootOverride?: string): InstalledDesk
       : join(lineBinDir(lineRoot), "current", "LINE.exe");
   }
   if (!exePath || !existsSync(exePath)) {
-    version = iniVer && versions.includes(iniVer)
-      ? iniVer
-      : versions.sort(compareVersions).at(-1)!;
+    version = iniVer && versions.includes(iniVer) ? iniVer : versions.sort(compareVersions).at(-1)!;
     exePath = versionExePath(lineRoot, version);
   }
   if (!existsSync(exePath)) return null;
@@ -276,10 +274,7 @@ export function listInstalledVersions(lineRootOverride?: string): InstalledVersi
 }
 
 /** インストール済みバージョンから指定バージョンを検索 */
-export function findInstalledVersion(
-  lineRoot: string,
-  version: string,
-): InstalledVersion | null {
+export function findInstalledVersion(lineRoot: string, version: string): InstalledVersion | null {
   return listInstalledVersions(lineRoot).find((v) => v.version === version) ?? null;
 }
 

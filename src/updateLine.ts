@@ -57,7 +57,7 @@ for (let i = 0; i < rawArgs.length; i++) {
   }
 }
 
-if (flags["help"] || flags["h"]) {
+if (flags.help || flags.h) {
   console.log(`usage: bun run update [options]
 
   --force             最新版でも再ダウンロードして展開
@@ -74,16 +74,17 @@ if (flags["help"] || flags["h"]) {
 const _here = dirname(fileURLToPath(import.meta.url));
 const TOOLS_DIR = join(_here, "..");
 
-const force = Boolean(flags["force"]);
+const force = Boolean(flags.force);
 const dryRun = Boolean(flags["dry-run"]);
 const pruneOld = Boolean(flags["prune-old"]);
-const doUnpack = Boolean(flags["unpack"]);
+const doUnpack = Boolean(flags.unpack);
 const unpackOut =
   typeof flags["unpack-out"] === "string"
     ? (flags["unpack-out"] as string)
     : join(TOOLS_DIR, "data", "unpacked_LINE.exe");
-const channel = typeof flags["channel"] === "string" ? (flags["channel"] as string) : "real";
-const lineRoot = typeof flags["line-root"] === "string" ? (flags["line-root"] as string) : undefined;
+const channel = typeof flags.channel === "string" ? (flags.channel as string) : "real";
+const lineRoot =
+  typeof flags["line-root"] === "string" ? (flags["line-root"] as string) : undefined;
 
 function log(msg: string): void {
   console.info(`[update] ${msg}`);
@@ -94,7 +95,7 @@ function warn(msg: string): void {
 }
 
 function localAppData(): string {
-  return process.env["LOCALAPPDATA"] ?? join(homedir(), "AppData", "Local");
+  return process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local");
 }
 
 function listRunningLinePids(): number[] {
@@ -121,9 +122,7 @@ function download(url: string, dest: string): void {
     stdio: "pipe",
   });
   if (res.status !== 0 || !existsSync(dest)) {
-    throw new Error(
-      `ダウンロード失敗: ${url}\n${res.stderr?.toString().slice(0, 500) ?? ""}`,
-    );
+    throw new Error(`ダウンロード失敗: ${url}\n${res.stderr?.toString().slice(0, 500) ?? ""}`);
   }
 }
 
@@ -146,18 +145,12 @@ function extractZip(zip: string, dest: string): void {
     log("tar 失敗 — PowerShell Expand-Archive にフォールバック");
     res = spawnSync(
       "powershell.exe",
-      [
-        "-NoProfile",
-        "-Command",
-        `Expand-Archive -Path '${zip}' -DestinationPath '${dest}' -Force`,
-      ],
+      ["-NoProfile", "-Command", `Expand-Archive -Path '${zip}' -DestinationPath '${dest}' -Force`],
       { stdio: "pipe" },
     );
   }
   if (res.status !== 0) {
-    throw new Error(
-      `ZIP 展開失敗:\n${res.stderr?.toString().slice(0, 800) ?? ""}`,
-    );
+    throw new Error(`ZIP 展開失敗:\n${res.stderr?.toString().slice(0, 800) ?? ""}`);
   }
 }
 
@@ -224,7 +217,10 @@ async function main(): Promise<void> {
   const target = resolveTargetVersion(info, current, os, systemType);
   if (!target) {
     warn("現在のバージョンに適用される更新対象エントリが見つかりません（最新の可能性）。");
-    const latest = info.infos.map((e) => e.version).sort(compareVersions).at(-1);
+    const latest = info.infos
+      .map((e) => e.version)
+      .sort(compareVersions)
+      .at(-1);
     log(`update_info 上の最新: ${latest ?? "不明"}`);
     return;
   }
@@ -288,7 +284,9 @@ async function main(): Promise<void> {
     pruneOldVersions([targetVersion, "shared", "current", "old"], binDir);
   }
 
-  log(`✓ 更新完了: ${current} → ${targetVersion} (${(statSync(newExe).size / 1024 / 1024).toFixed(1)} MB)`);
+  log(
+    `✓ 更新完了: ${current} → ${targetVersion} (${(statSync(newExe).size / 1024 / 1024).toFixed(1)} MB)`,
+  );
   log(`  exe: ${newExe}`);
   log(`  次: 再起動後 LINE は ${targetVersion} を使用します`);
 
