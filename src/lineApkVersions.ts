@@ -16,7 +16,7 @@
  *   - Google Play からの直接取得は gplaycli / apkeep 等の別ツールが必要です。
  */
 
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import { APK_DIR, DATA_DIR } from "./paths.js";
 
@@ -235,7 +235,7 @@ export function compareVersions(a: string, b: string): number {
 }
 
 export function sha256File(path: string): string {
-  const hash = Bun.CryptoHasher.createHash("sha256");
+  const hash = new Bun.CryptoHasher("sha256");
   hash.update(readFileSync(path));
   return hash.digest("hex");
 }
