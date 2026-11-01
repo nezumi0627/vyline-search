@@ -44,7 +44,7 @@ for (let i = 0; i < rawArgs.length; i++) {
   }
 }
 
-if (flags["help"] || flags["h"]) {
+if (flags.help || flags.h) {
   console.log(`usage: bun run check [options]
 
   --line-root <path>   LINE ルート（既定: %LOCALAPPDATA%\\LINE / VYLINE_LINE_ROOT / NEZU_LINE_ROOT）
@@ -69,12 +69,12 @@ function runningLineVersion(): string | null {
   }
 }
 
-const channel = typeof flags["channel"] === "string" ? (flags["channel"] as string) : "real";
+const channel = typeof flags.channel === "string" ? (flags.channel as string) : "real";
 const url = CHANNELS[channel] ?? UPDATE_INFO_URL;
-const jsonOut = Boolean(flags["json"]);
-const lineRoot = typeof flags["line-root"] === "string" ? (flags["line-root"] as string) : undefined;
-const versionSelect =
-  typeof flags["version"] === "string" ? (flags["version"] as string) : null;
+const jsonOut = Boolean(flags.json);
+const lineRoot =
+  typeof flags["line-root"] === "string" ? (flags["line-root"] as string) : undefined;
+const versionSelect = typeof flags.version === "string" ? (flags.version as string) : null;
 
 // --version 指定時はインストール済みバージョンから明示選択（なければエラー）
 let installed = detectInstalledDesktop(lineRoot);
@@ -106,18 +106,22 @@ const info = await fetchUpdateInfo(url);
 const os = osVersionString();
 const systemType = process.arch === "x64" ? "x64" : "x86";
 const target = resolveTargetVersion(info, installed?.version ?? "0.0.0.0", os, systemType);
-const latest = target?.version ?? info.infos.map((e) => e.version).sort(compareVersions).at(-1) ?? null;
+const latest =
+  target?.version ??
+  info.infos
+    .map((e) => e.version)
+    .sort(compareVersions)
+    .at(-1) ??
+  null;
 const running = runningLineVersion();
 
 const updateAvailable =
   installed !== null && latest !== null && compareVersions(latest, installed.version) > 0;
 
 // `latest` コマンド: 最新版のバージョン文字列のみ出力
-if (process.env["VYLINE_SEARCH_MODE"] === "latest") {
+if (process.env.VYLINE_SEARCH_MODE === "latest") {
   if (jsonOut) {
-    console.log(
-      JSON.stringify({ latest, channel, checkedAt: new Date().toISOString() }, null, 2),
-    );
+    console.log(JSON.stringify({ latest, channel, checkedAt: new Date().toISOString() }, null, 2));
   } else if (latest) {
     console.log(latest);
   } else {
@@ -180,8 +184,7 @@ console.log(`running   : ${running ?? "(LINE 未起動)"}`);
 console.log(`latest    : ${latest ?? "(取得不可)"}`);
 if (target) {
   console.log(
-    `  target: ${target.target} / os ${target.os} / type ${target.type}` +
-      (target.shared_version ? ` / shared ${target.shared_version}` : ""),
+    `  target: ${target.target} / os ${target.os} / type ${target.type}${target.shared_version ? ` / shared ${target.shared_version}` : ""}`,
   );
 }
 console.log("");

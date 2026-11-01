@@ -10,10 +10,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import {
-  currentExeVersion,
-  listInstalledVersions,
-} from "./lineVersions.js";
+import { currentExeVersion, listInstalledVersions } from "./lineVersions.js";
 import { defaultLineRoot, lineBinDir } from "./paths.js";
 
 const rawArgs = process.argv.slice(2);
@@ -31,7 +28,7 @@ for (let i = 0; i < rawArgs.length; i++) {
   }
 }
 
-if (flags["help"] || flags["h"]) {
+if (flags.help || flags.h) {
   console.log(`usage: bun run versions [options]
 
   --line-root <path>   LINE ルート（既定: %LOCALAPPDATA%\\LINE / VYLINE_LINE_ROOT / NEZU_LINE_ROOT）
@@ -40,8 +37,9 @@ if (flags["help"] || flags["h"]) {
   process.exit(0);
 }
 
-const jsonOut = Boolean(flags["json"]);
-const lineRoot = typeof flags["line-root"] === "string" ? (flags["line-root"] as string) : undefined;
+const jsonOut = Boolean(flags.json);
+const lineRoot =
+  typeof flags["line-root"] === "string" ? (flags["line-root"] as string) : undefined;
 
 const root = defaultLineRoot(lineRoot);
 const versions = listInstalledVersions(lineRoot);

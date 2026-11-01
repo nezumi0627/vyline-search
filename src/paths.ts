@@ -15,8 +15,7 @@ const _here = dirname(fileURLToPath(import.meta.url));
 /** Repo root (parent of src/) */
 export const REPO_ROOT = join(_here, "..");
 
-export const DATA_DIR =
-  process.env["VYLINE_SEARCH_DATA"]?.trim() || join(REPO_ROOT, "data");
+export const DATA_DIR = process.env.VYLINE_SEARCH_DATA?.trim() || join(REPO_ROOT, "data");
 
 export const GHIDRA_SCRIPTS_DIR = join(REPO_ROOT, "ghidra-scripts");
 export const RE_TOOLS_DIR = join(DATA_DIR, "re-tools");
@@ -30,14 +29,14 @@ export const APK_JADX_DIR = join(DATA_DIR, "apk-jadx");
 export function defaultLineRoot(override?: string): string {
   return (
     override ??
-    process.env["VYLINE_LINE_ROOT"]?.trim() ??
-    process.env["NEZU_LINE_ROOT"]?.trim() ??
+    process.env.VYLINE_LINE_ROOT?.trim() ??
+    process.env.NEZU_LINE_ROOT?.trim() ??
     join(localAppData(), "LINE")
   );
 }
 
 export function localAppData(): string {
-  return process.env["LOCALAPPDATA"] ?? join(homedir(), "AppData", "Local");
+  return process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local");
 }
 
 export function lineBinDir(lineRoot: string): string {
@@ -57,10 +56,7 @@ export function versionExePath(lineRoot: string, version: string): string {
 }
 
 export function defaultUnpackedExe(): string {
-  return (
-    process.env["VYLINE_SEARCH_EXE"]?.trim() ||
-    join(DATA_DIR, "unpacked_LINE.exe")
-  );
+  return process.env.VYLINE_SEARCH_EXE?.trim() || join(DATA_DIR, "unpacked_LINE.exe");
 }
 
 export function ensureDataLayout(): void {

@@ -14,10 +14,10 @@ const CLAUDE_JSON = join(homedir(), ".claude.json");
 
 function readLineBotEnv(): { token: string; userId: string } {
   // 環境変数優先（テスト/CI 用）
-  if (process.env["CHANNEL_ACCESS_TOKEN"] && process.env["DESTINATION_USER_ID"]) {
+  if (process.env.CHANNEL_ACCESS_TOKEN && process.env.DESTINATION_USER_ID) {
     return {
-      token: process.env["CHANNEL_ACCESS_TOKEN"],
-      userId: process.env["DESTINATION_USER_ID"],
+      token: process.env.CHANNEL_ACCESS_TOKEN,
+      userId: process.env.DESTINATION_USER_ID,
     };
   }
   const raw = readFileSync(CLAUDE_JSON, "utf8");

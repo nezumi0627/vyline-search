@@ -53,7 +53,9 @@ export interface ApkVersion {
 
 export function listLocalApks(): ApkVersion[] {
   if (!existsSync(APK_DIR)) return [];
-  const entries = readdirSync(APK_DIR).filter((n) => n.startsWith(LINE_APK_PREFIX) && n.endsWith(".apk"));
+  const entries = readdirSync(APK_DIR).filter(
+    (n) => n.startsWith(LINE_APK_PREFIX) && n.endsWith(".apk"),
+  );
   return entries
     .map((name) => {
       const path = join(APK_DIR, name);
@@ -95,7 +97,8 @@ async function fetchApkPureInfo(): Promise<ApkPureInfo | null> {
   try {
     const res = await fetch(`${APKPURE_BASE}${APKPURE_LINE_PATH}`, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
     });
     if (!res.ok) {
@@ -122,7 +125,11 @@ async function fetchApkPureInfo(): Promise<ApkPureInfo | null> {
     return {
       version,
       versionCode: versionCode ?? version,
-      downloadUrl: downloadUrl ? (downloadUrl.startsWith("http") ? downloadUrl : `${APKPURE_BASE}${downloadUrl}`) : null,
+      downloadUrl: downloadUrl
+        ? downloadUrl.startsWith("http")
+          ? downloadUrl
+          : `${APKPURE_BASE}${downloadUrl}`
+        : null,
       releaseDate: dateMatch?.[1] ?? null,
     };
   } catch (err) {
