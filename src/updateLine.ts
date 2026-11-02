@@ -102,7 +102,7 @@ function listRunningLinePids(): number[] {
   try {
     const out = execSync(
       "powershell.exe -NoProfile -Command \"(Get-Process -Name LINE -ErrorAction SilentlyContinue).Id -join ','\"",
-      { encoding: "utf8" },
+      { encoding: "utf8", windowsHide: true },
     ).trim();
     if (!out) return [];
     return out
@@ -146,7 +146,7 @@ function extractZip(zip: string, dest: string): void {
     res = spawnSync(
       "powershell.exe",
       ["-NoProfile", "-Command", `Expand-Archive -Path '${zip}' -DestinationPath '${dest}' -Force`],
-      { stdio: "pipe" },
+      { stdio: "pipe", windowsHide: true },
     );
   }
   if (res.status !== 0) {

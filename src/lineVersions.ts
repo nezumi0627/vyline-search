@@ -160,6 +160,7 @@ export function currentExeVersion(lineRoot: string): string | null {
     ],
     stdout: "pipe",
     stderr: "pipe",
+    windowsHide: true,
   });
   const v = (r.stdout?.toString() ?? "").trim();
   return VERSION_RE.test(v) ? v : null;

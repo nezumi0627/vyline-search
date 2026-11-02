@@ -116,6 +116,7 @@ function runCmd(
     env: { ...process.env, ...(opts?.env ?? {}) } as Record<string, string>,
     stdout: "pipe",
     stderr: "pipe",
+    windowsHide: true,
   });
   return {
     ok: proc.exitCode === 0,

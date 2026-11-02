@@ -59,7 +59,7 @@ function runningLineVersion(): string | null {
   try {
     const out = execSync(
       'powershell.exe -NoProfile -Command "(Get-Process -Name LINE -ErrorAction SilentlyContinue | Select-Object -First 1).Path"',
-      { encoding: "utf8" },
+      { encoding: "utf8", windowsHide: true },
     ).trim();
     if (!out) return null;
     const m = out.match(/\\(\d+\.\d+\.\d+\.\d+)\\LINE\.exe$/i);
