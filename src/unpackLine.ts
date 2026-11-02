@@ -121,6 +121,7 @@ function currentExeVersion(lineRoot: string): string | null {
     ],
     stdout: "pipe",
     stderr: "pipe",
+    windowsHide: true,
   });
   const v = (r.stdout?.toString() ?? "").trim();
   return VERSION_RE.test(v) ? v : null;
@@ -235,6 +236,7 @@ async function ensureUnlicense(): Promise<string> {
     ],
     stdout: "pipe",
     stderr: "pipe",
+    windowsHide: true,
   });
   if (expand.exitCode !== 0) {
     throw new Error(
@@ -260,6 +262,7 @@ function listRunningLinePids(): number[] {
     ],
     stdout: "pipe",
     stderr: "pipe",
+    windowsHide: true,
   });
   const text = (r.stdout?.toString() ?? "").trim();
   if (!text) return [];
