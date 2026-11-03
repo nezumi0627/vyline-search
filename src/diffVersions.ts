@@ -51,12 +51,18 @@ if (flags.help || flags.h) {
 
 const fromVersion = typeof flags.from === "string" ? flags.from : "";
 let toVersion = typeof flags.to === "string" ? flags.to : "";
-if (!/^\d+(?:\.\d+){3}$/.test(fromVersion) || (toVersion !== "latest" && !/^\d+(?:\.\d+){3}$/.test(toVersion))) {
+if (
+  !/^\d+(?:\.\d+){3}$/.test(fromVersion) ||
+  (toVersion !== "latest" && !/^\d+(?:\.\d+){3}$/.test(toVersion))
+) {
   throw new Error("--from と --to に4区切りのバージョン、または --to latest を指定してください。");
 }
-const lineRoot = defaultLineRoot(typeof flags["line-root"] === "string" ? flags["line-root"] : undefined);
+const lineRoot = defaultLineRoot(
+  typeof flags["line-root"] === "string" ? flags["line-root"] : undefined,
+);
 const binDir = lineBinDir(lineRoot);
-const outputDir = typeof flags.out === "string" ? flags.out : join(DATA_DIR, "reports", "line-diff");
+const outputDir =
+  typeof flags.out === "string" ? flags.out : join(DATA_DIR, "reports", "line-diff");
 const officialUrl = UPDATE_INFO_URL;
 const checkedAt = new Date().toISOString();
 const info = await fetchUpdateInfo(officialUrl);
@@ -66,19 +72,27 @@ const target = resolveTargetVersion(
   osVersionString(),
   process.arch === "x64" ? "x64" : "x86",
 );
-const latest = info.infos.map((entry) => entry.version).sort(compareVersions).at(-1) ?? null;
+const latest =
+  info.infos
+    .map((entry) => entry.version)
+    .sort(compareVersions)
+    .at(-1) ?? null;
 const downloadLatest = toVersion === "latest";
 if (downloadLatest) {
   if (!target) throw new Error(`公式 update_info に ${fromVersion} 向けの更新対象がありません。`);
   toVersion = target.version;
 }
 const toShared = downloadLatest
-  ? target!.shared_version ?? info.shared.version
-  : info.infos.find((entry) => entry.version === toVersion)?.shared_version ?? info.shared.version;
-
+  ? (target!.shared_version ?? info.shared.version)
+  : (info.infos.find((entry) => entry.version === toVersion)?.shared_version ??
+    info.shared.version);
 
 async function isDirectory(path: string): Promise<boolean> {
-  try { return (await stat(path)).isDirectory(); } catch { return false; }
+  try {
+    return (await stat(path)).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 async function collect(root: string, label: string): Promise<Map<string, FileEntry>> {
@@ -104,7 +118,9 @@ async function collect(root: string, label: string): Promise<Map<string, FileEnt
       for await (const chunk of createReadStream(file)) digest.update(chunk);
       const after = await stat(file);
       if (before.size !== after.size || before.mtimeMs !== after.mtimeMs) {
-        throw new Error(`比較中にファイルが変更されました。LINE を終了して再実行してください: ${file}`);
+        throw new Error(
+          `比較中にファイルが変更されました。LINE を終了して再実行してください: ${file}`,
+        );
       }
       const key = relative(root, file).split(sep).join("/");
       result.set(key, { path: key, size: after.size, sha256: digest.digest("hex") });
@@ -121,13 +137,16 @@ function versionRoot(version: string): string {
 async function collectVersion(version: string): Promise<Map<string, FileEntry>> {
   const base = versionRoot(version);
   const fallback = join(binDir, "current");
-  const root = await isDirectory(base) ? base : fallback;
+  const root = (await isDirectory(base)) ? base : fallback;
   return collect(root, `LINE ${version}`);
 }
 
 function run(command: string, args: string[]): string {
   const result = spawnSync(command, args, { encoding: "utf8", windowsHide: true });
-  if (result.status !== 0) throw new Error(`${command} ${args[0]} failed: ${result.stderr || result.error || "unknown error"}`);
+  if (result.status !== 0)
+    throw new Error(
+      `${command} ${args[0]} failed: ${result.stderr || result.error || "unknown error"}`,
+    );
   return result.stdout ?? "";
 }
 
@@ -135,7 +154,11 @@ function extractOfficialZip(zipPath: string, destination: string): void {
   const entries = run("tar.exe", ["-tf", zipPath]).split(/\r?\n/).filter(Boolean);
   for (const entry of entries) {
     const normalized = entry.replaceAll("\\", "/").replace(/^\.\//, "");
-    if (normalized.startsWith("/") || /^[A-Za-z]:/.test(normalized) || normalized.split("/").includes("..")) {
+    if (
+      normalized.startsWith("/") ||
+      /^[A-Za-z]:/.test(normalized) ||
+      normalized.split("/").includes("..")
+    ) {
       throw new Error(`ZIP に不正な展開パスがあります: ${entry}`);
     }
   }
@@ -145,7 +168,11 @@ function extractOfficialZip(zipPath: string, destination: string): void {
 
 function downloadOfficialFile(url: string, destination: string): void {
   if (existsSync(destination)) return;
-  const result = spawnSync("curl.exe", ["-sS", "-L", "--fail", "--retry", "3", "-o", destination, url], { encoding: "utf8", windowsHide: true });
+  const result = spawnSync(
+    "curl.exe",
+    ["-sS", "-L", "--fail", "--retry", "3", "-o", destination, url],
+    { encoding: "utf8", windowsHide: true },
+  );
   if (result.status !== 0 || !existsSync(destination)) {
     throw new Error(`公式ファイルをダウンロードできません: ${url}\n${result.stderr ?? ""}`);
   }
@@ -166,12 +193,14 @@ async function sha256File(path: string): Promise<string> {
 }
 
 const officialCache = join(DATA_DIR, "releases", toVersion);
-const officialSource = downloadLatest ? {
-  lineZip: lineZipUrl(info, toVersion),
-  sharedZip: sharedLibZipUrl(info, toShared),
-  lineDirectory: join(officialCache, "LINE"),
-  sharedDirectory: join(officialCache, "shared"),
-} : null;
+const officialSource = downloadLatest
+  ? {
+      lineZip: lineZipUrl(info, toVersion),
+      sharedZip: sharedLibZipUrl(info, toShared),
+      lineDirectory: join(officialCache, "LINE"),
+      sharedDirectory: join(officialCache, "shared"),
+    }
+  : null;
 if (officialSource) {
   await mkdir(officialCache, { recursive: true });
   const lineZip = join(officialCache, "LINE.zip");
@@ -188,7 +217,10 @@ const [fromFiles, toFiles] = await Promise.all([
   officialSource
     ? (async () => {
         const files = await collect(officialSource.lineDirectory, `official LINE ${toVersion}`);
-        for (const [key, file] of await collect(officialSource.sharedDirectory, `official shared ${toShared}`)) {
+        for (const [key, file] of await collect(
+          officialSource.sharedDirectory,
+          `official shared ${toShared}`,
+        )) {
           files.set(key, { ...file, path: key });
         }
         return files;
@@ -226,8 +258,11 @@ const report = {
     downloadedOfficialPackages: downloadLatest,
     lineZipSha256,
     sharedZipSha256,
-    releaseNotesUrl: typeof flags["release-notes-url"] === "string" ? flags["release-notes-url"] : null,
-    releaseNotesStatus: flags["release-notes-url"] ? "user-supplied URL; content not fetched" : "not provided by official update metadata",
+    releaseNotesUrl:
+      typeof flags["release-notes-url"] === "string" ? flags["release-notes-url"] : null,
+    releaseNotesStatus: flags["release-notes-url"]
+      ? "user-supplied URL; content not fetched"
+      : "not provided by official update metadata",
   },
   summary: {
     added: changes.filter((c) => c.status === "added").length,
@@ -244,11 +279,13 @@ const jsonPath = join(outputDir, `${stem}.json`);
 const mdPath = join(outputDir, `${stem}.md`);
 await Bun.write(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
 const rows = changes.length
-  ? changes.map((change) => {
-      const before = change.from ? `${change.from.size} B / ${change.from.sha256}` : "—";
-      const after = change.to ? `${change.to.size} B / ${change.to.sha256}` : "—";
-      return `| ${change.status} | \`${change.path.replaceAll("|", "&#124;")}\` | ${before} | ${after} |`;
-    }).join("\n")
+  ? changes
+      .map((change) => {
+        const before = change.from ? `${change.from.size} B / ${change.from.sha256}` : "—";
+        const after = change.to ? `${change.to.size} B / ${change.to.sha256}` : "—";
+        return `| ${change.status} | \`${change.path.replaceAll("|", "&#124;")}\` | ${before} | ${after} |`;
+      })
+      .join("\n")
   : "| — | No file differences | — | — |";
 const markdown = `# LINE Desktop file diff: ${fromVersion} → ${toVersion}
 
