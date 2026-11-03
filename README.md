@@ -15,6 +15,7 @@ Desktop LINE（Themida 保護）向けの **unpack / ネイティブシンボル
 3. **unpack** — Themida 保護の `LINE.exe` を [unlicense](https://github.com/ergrelet/unlicense) で dump → `data/unpacked_LINE.exe`
 4. **find** — 単語（例: `sendMessage`）から文字列列挙 → LEA xref → Ghidra decompile
 5. **focus** — 全件 decompile 結果のキーワード分類（任意）
+6. **diff** — 公式 update_info と配信 ZIP を照合し、全ファイル差分を Markdown / JSON レポート化
 
 ## 必要環境
 
@@ -44,6 +45,8 @@ bun install
 # 0) バージョン確認 / 一覧 / 最新版取得 / 更新
 bun run check                  # インストール版 vs 最新版の比較
 bun run versions               # インストール済みバージョン一覧
+bun run diff -- --from 26.4.2.3954 --to latest  # 公式最新版を取得して更新前に比較
+bun run diff -- --from 26.4.2.3954 --to 26.6.0.4004  # インストール済み2版を比較
 bun run check -- --version 26.4.2.3954   # 指定バージョンで比較
 bun run latest                 # 最新版だけ出力
 bun run update -- --dry-run    # 更新対象の確認
@@ -108,6 +111,8 @@ data/out/native-search/<terms>/
   rva-targets.txt
   functions/*.c
 ```
+
+差分レポートは `data/reports/line-diff/` に Markdown と JSON で保存し、公式 ZIP の再利用キャッシュは `data/releases/<version>/` に保存します。差分表には追加・削除・変更された全ファイルのサイズと SHA-256 を含みます。公式 `update_info.json` は版・適用条件・配信 URL を提供しますが、変更説明文は含まれません。公式リリースノート URL を確認済みの場合は `--release-notes-url <url>` でレポートに記録できます。
 
 `data/` 以下（exe・ツールキャッシュ・出力）は gitignore 済みです。
 
