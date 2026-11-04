@@ -9,6 +9,7 @@
  *   bun run search -- check --json
  *   bun run search -- update --unpack
  *   bun run search -- versions
+ *   bun run search -- diff --from 26.4.2.3954 --to latest
  */
 
 export {};
@@ -26,6 +27,7 @@ Usage:
   bun run search -- latest [options]    # 最新版のみ表示
   bun run search -- update [options]    # LINE Desktop を最新版へ更新
   bun run search -- versions [options]  # インストール済みバージョン一覧
+  bun run search -- diff [options]      # 公式最新版を取得して全ファイル差分レポート
 
 Shortcuts:
   bun run unpack -- ...
@@ -65,6 +67,9 @@ if (cmd === "unpack") {
 } else if (cmd === "versions") {
   process.argv = [process.argv[0]!, process.argv[1]!, ...rest];
   await import("./versions.js");
+} else if (cmd === "diff") {
+  process.argv = [process.argv[0]!, process.argv[1]!, ...rest];
+  await import("./diffVersions.js");
 } else {
   console.error(`unknown command: ${cmd}`);
   console.error("try: bun run search -- unpack");
